@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ImageResponse } from "next/og";
 import { getNFTs } from "../utils";
 import sharp from "sharp";
 const { GIFEncoder, applyPalette, quantize } = require('gifenc');
@@ -9,6 +10,40 @@ function getRandomIntExclusive(min: number, max: number) {
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
 }
+
+const getLabel = async (title: string, owner: string) => {
+  const data = new ImageResponse(
+    (
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }}>
+      <div
+        style={{
+          fontSize: 36,
+          color: "#000000",
+          justifyContent: "center",
+          paddingTop: "6px",
+          display: "flex",
+        }}
+      >
+        {title}
+      </div>
+      <div style={{
+          fontSize: 16,
+          color: "#0000FF",
+          justifyContent: "center",
+          paddingTop: "6px",
+          display: "flex",
+      }}>
+        owned by {owner}
+      </div>
+      </div>
+    ),
+    {
+      width: 600,
+      height: 292,
+    }
+  );
+  return await data.arrayBuffer();
+};
 
 export async function GET(
    _: NextRequest,
@@ -44,25 +79,17 @@ export async function GET(
     // Decode the Base64 string into an SVG string
     const svg = Buffer.from(base64, "base64");
     const nft = await sharp(svg).resize(380, 380).png().toBuffer();
-
-    const textSvg = `
-    <svg width="600" height="600">
-        <style>
-            text { font-family: cursive; font-size: 36px; fill: black; }
-        </style>
-        <text x="50%" y="48.5%" dominant-baseline="middle" text-anchor="middle">
-            ${NFTs[i].project} ${NFTs[i].id}
-        </text>
-        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" style="font-size: 16px; fill: blue">
-            owned by ${params.address.slice(0, 20)}
-        </text>
-    </svg>
-    `;
+    const text = Buffer.from(
+      await getLabel(
+        `${NFTs[i].project} ${NFTs[i].id}`,
+        params.address.slice(0, 20)
+      )
+    );
 
     const data = await background
       .composite([
         { input: nft, top: 71, left: 107 },
-        { input: Buffer.from(textSvg), top: 214, left: 0 },
+        { input: text, top: 460, left: 0 },
       ])
       .raw()
       .toBuffer();
