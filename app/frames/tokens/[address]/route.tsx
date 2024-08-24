@@ -11,6 +11,35 @@ function getRandomIntExclusive(min: number, max: number) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+//const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" shape-rendering="crispEdges" viewBox="0 0 16 16" style="background-color: hsla(343,60%,80%,100%)"><rect height="1" width="1" fill="#DA544E" x="6" y="3" id="a" />`;
+
+function addBackgroundRect(svgString: string) {
+  // Extract background-color from the style attribute
+  const bgColorMatch = svgString.match(/background-color\s*:\s*([^;"]+)/)
+
+  if (!bgColorMatch) {
+    console.log("No background-color found in the style attribute.");
+    return svgString;
+  }
+
+  const backgroundColor = bgColorMatch[1];
+
+  // Determine the position to insert the <rect> element
+  const rectInsertionPoint = svgString.indexOf('>') + 1;
+
+  // Create the <rect> element string
+  const rectElement = `<rect width="100%" height="100%" fill="${backgroundColor}" />`;
+
+  // Insert the <rect> element after the opening <svg> tag
+  const updatedSvgString = [
+    svgString.slice(0, rectInsertionPoint),
+    rectElement,
+    svgString.slice(rectInsertionPoint),
+  ].join('');
+
+  return updatedSvgString;
+}
+
 const getLabel = async (title: string, owner: string) => {
   const data = new ImageResponse(
     (
@@ -71,17 +100,29 @@ export async function GET(
   const width = 600;
   const height = 600;
 
+  const getSVG = (base64: string, addBackground: boolean) => {
+    const svg = Buffer.from(base64, "base64");
+
+    if (!addBackground) {
+      return svg;
+    }
+
+    const svgString = addBackgroundRect(svg.toString());
+    return Buffer.from(svgString, 'utf-8')
+  }
+
   for (let i = 0; i < NFTs.length; i++) {
     // Extract the Base64 data part
     const base64Data = NFTs[i].image_data;
     const [, base64] = base64Data.split(",");
 
     // Decode the Base64 string into an SVG string
-    const svg = Buffer.from(base64, "base64");
+    const svg = getSVG(base64, NFTs[i].add_background)
+
     const nft = await sharp(svg).resize(380, 380).png().toBuffer();
     const text = Buffer.from(
       await getLabel(
-        `${NFTs[i].project} ${NFTs[i].id}`,
+        `${NFTs[i].project} #${NFTs[i].id}`,
         params.address.slice(0, 20)
       )
     );
@@ -101,7 +142,7 @@ export async function GET(
     const index = applyPalette(data, palette);
 
     // Write a single frame
-    gif.writeFrame(index, width, height, { palette, delay: 1000 });
+    gif.writeFrame(index, width, height, { palette, delay: 1500 });
   }
 
   // Write end-of-stream character

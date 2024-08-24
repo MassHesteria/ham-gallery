@@ -9,6 +9,7 @@ export type NFTData = {
   project: string;
   id: string;
   image_data: string;
+  add_background: boolean;
 }
 
 function objectToQueryString(params: any) {
@@ -41,15 +42,38 @@ async function fetchPaginatedData(apiUrl: string) {
 
       data.items.forEach((i: any) => {
         switch (i.token.name) {
-          case 'HAMsters':
-            NFTs.push({ project: i.token.name, id: i.id, image_data: i.image_url });
+          case "HAMsters":
+            NFTs.push({
+              project: i.token.name,
+              id: i.id,
+              image_data: i.image_url,
+              add_background: false,
+            });
             break;
-          case 'The Ham LP':
-            NFTs.push({ project: "Ham LP", id: i.id, image_data: i.image_url });
+          case "The Ham LP":
+            NFTs.push({
+              project: "Ham LP",
+              id: i.id,
+              image_data: i.image_url,
+              add_background: false,
+            });
             break;
-          case 'ham dinos':
+          case "HAM Onchain Punks":
+            NFTs.push({
+              project: "HAM Punks",
+              id: i.id,
+              image_data: i.metadata.image_data,
+              add_background: false,
+            });
+            break;
+          case "ham dinos":
             //console.log(i.metadata)
-            //NFTs.push({ project: i.token.name, id: i.id, image_data: i.image_url });
+            NFTs.push({
+              project: i.token.name,
+              id: i.id,
+              image_data: i.image_url,
+              add_background: true,
+            });
           default:
             break;
         }
