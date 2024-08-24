@@ -13,7 +13,9 @@
     "gifenc": "^1.0.3",
     "next": "14.2.6",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sharp": "^0.33.5",
+    "viem": "^2.20.0"
   },
   "devDependencies": {
     "@types/node": "^20",
