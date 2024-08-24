@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getNFTs } from "../utils";
 import sharp from "sharp";
 const { GIFEncoder, applyPalette, quantize } = require('gifenc');
+import path from 'path'
 
 function getRandomIntExclusive(min: number, max: number) {
   min = Math.ceil(min);
@@ -28,7 +29,7 @@ export async function GET(
   shuffle(NFTs)
 
   //const background = await sharp('main.png').resize(600, 600);
-  const background = await sharp('main-alt.png');
+  const background = await sharp(path.join(process.cwd(), 'main-alt.png'));
 
   // Create an encoding stream
   const gif = GIFEncoder();
@@ -44,19 +45,19 @@ export async function GET(
     const svg = Buffer.from(base64, "base64");
     const nft = await sharp(svg).resize(380, 380).png().toBuffer();
 
-const textSvg = `
-<svg width="600" height="600">
-    <style>
-        text { font-family: cursive; font-size: 36px; fill: black; }
-    </style>
-    <text x="50%" y="48.5%" dominant-baseline="middle" text-anchor="middle">
-        ${NFTs[i].project} ${NFTs[i].id}
-    </text>
-    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" style="font-size: 16px; fill: blue">
-        owned by ${params.address.slice(0, 20)}
-    </text>
-</svg>
-`;
+    const textSvg = `
+    <svg width="600" height="600">
+        <style>
+            text { font-family: cursive; font-size: 36px; fill: black; }
+        </style>
+        <text x="50%" y="48.5%" dominant-baseline="middle" text-anchor="middle">
+            ${NFTs[i].project} ${NFTs[i].id}
+        </text>
+        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" style="font-size: 16px; fill: blue">
+            owned by ${params.address.slice(0, 20)}
+        </text>
+    </svg>
+    `;
 
     const data = await background
       .composite([
